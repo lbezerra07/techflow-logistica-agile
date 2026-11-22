@@ -1,6 +1,23 @@
+const crypto = require("node:crypto");
 const { criarConexao } = require("./database");
 
 const STATUS_VALIDOS = ["Pendente", "Em Rota", "Entregue"];
+const CARACTERES_CODIGO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+function gerarBlocoAleatorio(tamanho = 3) {
+  const bytes = crypto.randomBytes(tamanho);
+  let bloco = "";
+  for (let i = 0; i < tamanho; i++) {
+    bloco += CARACTERES_CODIGO[bytes[i] % CARACTERES_CODIGO.length];
+  }
+  return bloco;
+}
+
+function gerarCodigoRastreio(sequencia = 1) {
+  const numeroFormatado = String(Math.max(1, Number(sequencia) || 1)).padStart(4, "0");
+  const letras = gerarBlocoAleatorio(3);
+  return `TF-${letras}-${numeroFormatado}`;
+}
 
 class Entrega {
   constructor({ codigo, destinatario, destino, status = "Pendente" }) {
@@ -17,7 +34,7 @@ class Entrega {
       throw new Error(`Status inválido: ${status}`);
     }
 
-    this.codigo = String(codigo).trim();
+    this.codigo = String(codigo).trim().toUpperCase();
     this.destinatario = String(destinatario).trim();
     this.destino = String(destino).trim();
     this.status = status;
@@ -29,8 +46,29 @@ class GerenciadorEntregas {
     this.db = db;
   }
 
-  cadastrar(dados) {
-    const entrega = new Entrega(dados);
+  obterProximoCodigoAutomatico() {
+    const totalAtual = this.db.prepare("SELECT COUNT(*) AS total FROM entregas").get().total;
+    let sequencia = Number(totalAtual) + 1;
+    let candidato = gerarCodigoRastreio(sequencia);
+
+    while (this.buscarPorCodigo(candidato)) {
+      sequencia += 1;
+      candidato = gerarCodigoRastreio(sequencia);
+    }
+
+    return candidato;
+  }
+
+  cadastrar(dados = {}) {
+    const codigoFinal =
+      dados.codigo && String(dados.codigo).trim() !== ""
+        ? String(dados.codigo).trim().toUpperCase()
+        : this.obterProximoCodigoAutomatico();
+
+    const entrega = new Entrega({
+      ...dados,
+      codigo: codigoFinal,
+    });
 
     if (this.buscarPorCodigo(entrega.codigo)) {
       throw new Error(`Já existe uma entrega com o código ${entrega.codigo}.`);
@@ -53,7 +91,7 @@ class GerenciadorEntregas {
     const stmt = this.db.prepare(
       "SELECT codigo, destinatario, destino, status FROM entregas WHERE codigo = ?"
     );
-    return stmt.get(String(codigo).trim()) || null;
+    return stmt.get(String(codigo).trim().toUpperCase()) || null;
   }
 
   atualizarStatus(codigo, novoStatus) {
@@ -89,4 +127,5 @@ module.exports = {
   Entrega,
   GerenciadorEntregas,
   STATUS_VALIDOS,
+  gerarCodigoRastreio,
 };

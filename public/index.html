@@ -8,7 +8,6 @@
     :root {
       --bg: #0f172a;
       --surface: #1e293b;
-      --surface-hover: #334155;
       --border: #334155;
       --text: #f8fafc;
       --text-muted: #94a3b8;
@@ -92,14 +91,27 @@
       margin-bottom: 1.5rem;
     }
 
+    .card-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
     .card h2 {
       font-size: 1.1rem;
-      margin-bottom: 1rem;
+    }
+
+    .card-hint {
+      color: var(--text-muted);
+      font-size: 0.85rem;
     }
 
     form {
       display: grid;
-      grid-template-columns: 1fr 1.5fr 1.5fr auto;
+      grid-template-columns: 1.5fr 1.5fr auto;
       gap: 0.8rem;
     }
 
@@ -248,9 +260,11 @@
     </section>
 
     <section class="card">
-      <h2>Nova Entrega</h2>
+      <div class="card-header-row">
+        <h2>Nova Entrega</h2>
+        <span class="card-hint">Código gerado automaticamente (ex: TF-A8K-0001)</span>
+      </div>
       <form id="form-entrega">
-        <input type="text" id="codigo" placeholder="Código (ex: TF-101)" required />
         <input type="text" id="destinatario" placeholder="Destinatário" required />
         <input type="text" id="destino" placeholder="Destino (Cidade - UF)" required />
         <button type="submit">+ Cadastrar</button>
@@ -349,14 +363,13 @@
 
     document.getElementById("form-entrega").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const codigo = document.getElementById("codigo").value;
       const destinatario = document.getElementById("destinatario").value;
       const destino = document.getElementById("destino").value;
 
       const res = await fetch("/api/entregas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ codigo, destinatario, destino }),
+        body: JSON.stringify({ destinatario, destino }),
       });
 
       const data = await res.json();
@@ -398,4 +411,3 @@
   </script>
 </body>
 </html>
-EOF

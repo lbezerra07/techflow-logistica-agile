@@ -16,14 +16,14 @@ describe("GerenciadorEntregas com SQLite (CRUD + validações)", () => {
     db.close();
   });
 
-  it("deve gerar código automático no padrão TF-XXX-0001 e iniciar como Pendente", () => {
+  it("deve gerar código automático no padrão TF-XXX-0001 e iniciar como Aguardando Produção", () => {
     const entrega = gerenciador.cadastrar({
       destinatario: "Ana Silva",
       destino: "São Paulo - SP",
     });
 
     assert.match(entrega.codigo, /^TF-[A-Z2-9]{3}-0001$/);
-    assert.equal(entrega.status, "Pendente");
+    assert.equal(entrega.status, "Aguardando Produção");
     assert.equal(gerenciador.listar().length, 1);
   });
 
@@ -63,14 +63,28 @@ describe("GerenciadorEntregas com SQLite (CRUD + validações)", () => {
     assert.equal(gerenciador.buscarPorCodigo("TF-ZZZ-9999"), null);
   });
 
-  it("deve atualizar status válido e rejeitar status inválido", () => {
+  it("deve avançar status na ordem válida e bloquear status ou transição inválida", () => {
     const criada = gerenciador.cadastrar({
       destinatario: "Pedro Lima",
       destino: "Belo Horizonte - MG",
     });
 
-    const atualizada = gerenciador.atualizarStatus(criada.codigo, "Em Rota");
-    assert.equal(atualizada.status, "Em Rota");
+    assert.throws(() => {
+      gerenciador.atualizarStatus(criada.codigo, "Em Rota");
+    }, /Transição de status inválida/);
+
+    const producaoConcluida = gerenciador.atualizarStatus(criada.codigo, "Produção Concluída");
+    assert.equal(producaoConcluida.status, "Produção Concluída");
+
+    const emRota = gerenciador.atualizarStatus(criada.codigo, "Em Rota");
+    assert.equal(emRota.status, "Em Rota");
+
+    const entregue = gerenciador.atualizarStatus(criada.codigo, "Entregue");
+    assert.equal(entregue.status, "Entregue");
+
+    assert.throws(() => {
+      gerenciador.atualizarStatus(criada.codigo, "Aguardando Produção");
+    }, /Transição de status inválida/);
 
     assert.throws(() => {
       gerenciador.atualizarStatus(criada.codigo, "Extraviado");

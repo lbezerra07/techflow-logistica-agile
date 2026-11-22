@@ -1,7 +1,20 @@
 const crypto = require("node:crypto");
 const { criarConexao } = require("./database");
 
-const STATUS_VALIDOS = ["Pendente", "Em Rota", "Entregue"];
+const STATUS_VALIDOS = [
+  "Aguardando Produção",
+  "Produção Concluída",
+  "Em Rota",
+  "Entregue",
+];
+
+const TRANSICOES_PERMITIDAS = {
+  "Aguardando Produção": ["Produção Concluída"],
+  "Produção Concluída": ["Em Rota"],
+  "Em Rota": ["Entregue"],
+  "Entregue": [],
+};
+
 const CARACTERES_CODIGO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 function gerarBlocoAleatorio(tamanho = 3) {
@@ -20,7 +33,7 @@ function gerarCodigoRastreio(sequencia = 1) {
 }
 
 class Entrega {
-  constructor({ codigo, destinatario, destino, status = "Pendente" }) {
+  constructor({ codigo, destinatario, destino, status = "Aguardando Produção" }) {
     if (!codigo || String(codigo).trim() === "") {
       throw new Error("Código de rastreio é obrigatório.");
     }
@@ -68,6 +81,7 @@ class GerenciadorEntregas {
     const entrega = new Entrega({
       ...dados,
       codigo: codigoFinal,
+      status: dados.status || "Aguardando Produção",
     });
 
     if (this.buscarPorCodigo(entrega.codigo)) {
@@ -104,6 +118,15 @@ class GerenciadorEntregas {
       throw new Error(`Entrega ${codigo} não encontrada.`);
     }
 
+    if (entrega.status !== novoStatus) {
+      const permitidos = TRANSICOES_PERMITIDAS[entrega.status] || [];
+      if (!permitidos.includes(novoStatus)) {
+        throw new Error(
+          `Transição de status inválida: ${entrega.status} -> ${novoStatus}`
+        );
+      }
+    }
+
     const stmt = this.db.prepare("UPDATE entregas SET status = ? WHERE codigo = ?");
     stmt.run(novoStatus, entrega.codigo);
 
@@ -127,5 +150,6 @@ module.exports = {
   Entrega,
   GerenciadorEntregas,
   STATUS_VALIDOS,
+  TRANSICOES_PERMITIDAS,
   gerarCodigoRastreio,
 };

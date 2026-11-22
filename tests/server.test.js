@@ -21,28 +21,35 @@ describe("API REST /api/entregas", () => {
     db.close();
   });
 
-  it("deve criar, listar, atualizar status e remover entrega via HTTP", async () => {
+  it("deve criar, listar, avançar status e remover entrega via HTTP", async () => {
     // 1. POST - Cadastrar
     const resCreate = await fetch(`${baseUrl}/api/entregas`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        codigo: "TF-900",
+        codigo: "TF-ABC-0900",
         destinatario: "Fernanda Alves",
         destino: "Campinas - SP",
       }),
     });
     assert.equal(resCreate.status, 201);
     const criada = await resCreate.json();
-    assert.equal(criada.status, "Pendente");
+    assert.equal(criada.status, "Aguardando Produção");
 
     // 2. GET - Listar
     const resList = await fetch(`${baseUrl}/api/entregas`);
     const lista = await resList.json();
     assert.equal(lista.length, 1);
 
-    // 3. PATCH - Atualizar status
-    const resPatch = await fetch(`${baseUrl}/api/entregas/TF-900`, {
+    // 3. PATCH - Avançar status na sequência válida
+    const resProducao = await fetch(`${baseUrl}/api/entregas/TF-ABC-0900`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "Produção Concluída" }),
+    });
+    assert.equal(resProducao.status, 200);
+
+    const resPatch = await fetch(`${baseUrl}/api/entregas/TF-ABC-0900`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: "Em Rota" }),
@@ -52,7 +59,7 @@ describe("API REST /api/entregas", () => {
     assert.equal(atualizada.status, "Em Rota");
 
     // 4. DELETE - Remover
-    const resDelete = await fetch(`${baseUrl}/api/entregas/TF-900`, {
+    const resDelete = await fetch(`${baseUrl}/api/entregas/TF-ABC-0900`, {
       method: "DELETE",
     });
     assert.equal(resDelete.status, 200);

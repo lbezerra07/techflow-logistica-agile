@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TechFlow Solutions — Gestão Logística</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-hover: #334155;
+      --border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --warning: #f59e0b;
+      --info: #06b6d4;
+      --success: #10b981;
+      --danger: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    header span {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.1rem;
+    }
+
+    .stat-card small {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-card strong {
+      display: block;
+      font-size: 1.8rem;
+      margin-top: 0.3rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr 1.5fr auto;
+      gap: 0.8rem;
+    }
+
+    @media (max-width: 768px) {
+      form { grid-template-columns: 1fr; }
+    }
+
+    input, select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.7rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--primary);
+    }
+
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    button:hover { background: var(--primary-hover); }
+
+    button.btn-danger {
+      background: transparent;
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      padding: 0.4rem 0.75rem;
+      font-size: 0.85rem;
+    }
+
+    button.btn-danger:hover {
+      background: var(--danger);
+      color: white;
+    }
+
+    .feedback {
+      margin-top: 0.8rem;
+      font-size: 0.9rem;
+      min-height: 1.2rem;
+    }
+
+    .feedback.erro { color: var(--danger); }
+    .feedback.sucesso { color: var(--success); }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .toolbar input { width: 280px; max-width: 100%; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.85rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.95rem;
+    }
+
+    th {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .badge-Pendente { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .badge-Em\ Rota { background: rgba(6, 182, 212, 0.15); color: var(--info); }
+    .badge-Entregue { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+
+    .acoes {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .acoes select {
+      padding: 0.35rem 0.6rem;
+      font-size: 0.85rem;
+    }
+
+    .vazio {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 2rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>🚚 TechFlow Solutions</h1>
+        <span>Painel de Controle e Rastreamento Logístico</span>
+      </div>
+      <span id="status-api">Conectando à API...</span>
+    </header>
+
+    <section class="stats">
+      <div class="stat-card">
+        <small>Total de Entregas</small>
+        <strong id="stat-total">0</strong>
+      </div>
+      <div class="stat-card">
+        <small>Pendentes</small>
+        <strong id="stat-pendente" style="color: var(--warning)">0</strong>
+      </div>
+      <div class="stat-card">
+        <small>Em Rota</small>
+        <strong id="stat-rota" style="color: var(--info)">0</strong>
+      </div>
+      <div class="stat-card">
+        <small>Entregues</small>
+        <strong id="stat-entregue" style="color: var(--success)">0</strong>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Nova Entrega</h2>
+      <form id="form-entrega">
+        <input type="text" id="codigo" placeholder="Código (ex: TF-101)" required />
+        <input type="text" id="destinatario" placeholder="Destinatário" required />
+        <input type="text" id="destino" placeholder="Destino (Cidade - UF)" required />
+        <button type="submit">+ Cadastrar</button>
+      </form>
+      <div id="feedback" class="feedback"></div>
+    </section>
+
+    <section class="card">
+      <div class="toolbar">
+        <h2>Entregas Registradas</h2>
+        <input type="text" id="busca" placeholder="Filtrar por código, destinatário ou destino..." />
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Destinatário</th>
+              <th>Destino</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-entregas">
+            <tr><td colspan="5" class="vazio">Carregando entregas...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    let entregasCache = [];
+
+    const tabelaEl = document.getElementById("tabela-entregas");
+    const feedbackEl = document.getElementById("feedback");
+    const buscaEl = document.getElementById("busca");
+    const statusApiEl = document.getElementById("status-api");
+
+    function mostrarFeedback(mensagem, tipo) {
+      feedbackEl.textContent = mensagem;
+      feedbackEl.className = `feedback ${tipo}`;
+      setTimeout(() => { feedbackEl.textContent = ""; }, 4000);
+    }
+
+    function atualizarEstatisticas(lista) {
+      document.getElementById("stat-total").textContent = lista.length;
+      document.getElementById("stat-pendente").textContent = lista.filter(e => e.status === "Pendente").length;
+      document.getElementById("stat-rota").textContent = lista.filter(e => e.status === "Em Rota").length;
+      document.getElementById("stat-entregue").textContent = lista.filter(e => e.status === "Entregue").length;
+    }
+
+    function renderizarTabela() {
+      const termo = buscaEl.value.trim().toLowerCase();
+      const filtradas = entregasCache.filter(e =>
+        e.codigo.toLowerCase().includes(termo) ||
+        e.destinatario.toLowerCase().includes(termo) ||
+        e.destino.toLowerCase().includes(termo)
+      );
+
+      if (filtradas.length === 0) {
+        tabelaEl.innerHTML = `<tr><td colspan="5" class="vazio">Nenhuma entrega encontrada.</td></tr>`;
+        return;
+      }
+
+      tabelaEl.innerHTML = filtradas.map(entrega => `
+        <tr>
+          <td><strong>${entrega.codigo}</strong></td>
+          <td>${entrega.destinatario}</td>
+          <td>${entrega.destino}</td>
+          <td><span class="badge badge-${entrega.status}">${entrega.status}</span></td>
+          <td class="acoes">
+            <select aria-label="Alterar status" onchange="alterarStatus('${entrega.codigo}', this.value)">
+              <option value="Pendente" ${entrega.status === "Pendente" ? "selected" : ""}>Pendente</option>
+              <option value="Em Rota" ${entrega.status === "Em Rota" ? "selected" : ""}>Em Rota</option>
+              <option value="Entregue" ${entrega.status === "Entregue" ? "selected" : ""}>Entregue</option>
+            </select>
+            <button class="btn-danger" onclick="removerEntrega('${entrega.codigo}')">Excluir</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    async function carregarEntregas() {
+      try {
+        const res = await fetch("/api/entregas");
+        entregasCache = await res.json();
+        statusApiEl.textContent = "🟢 API Online (SQLite)";
+        atualizarEstatisticas(entregasCache);
+        renderizarTabela();
+      } catch {
+        statusApiEl.textContent = "🔴 Erro ao conectar na API";
+      }
+    }
+
+    document.getElementById("form-entrega").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const codigo = document.getElementById("codigo").value;
+      const destinatario = document.getElementById("destinatario").value;
+      const destino = document.getElementById("destino").value;
+
+      const res = await fetch("/api/entregas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codigo, destinatario, destino }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        return mostrarFeedback(data.erro || "Erro ao cadastrar.", "erro");
+      }
+
+      e.target.reset();
+      mostrarFeedback(`Entrega ${data.codigo} cadastrada com sucesso!`, "sucesso");
+      carregarEntregas();
+    });
+
+    async function alterarStatus(codigo, novoStatus) {
+      const res = await fetch(`/api/entregas/${encodeURIComponent(codigo)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: novoStatus }),
+      });
+
+      if (res.ok) {
+        mostrarFeedback(`Status de ${codigo} atualizado para "${novoStatus}".`, "sucesso");
+        carregarEntregas();
+      }
+    }
+
+    async function removerEntrega(codigo) {
+      const res = await fetch(`/api/entregas/${encodeURIComponent(codigo)}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        mostrarFeedback(`Entrega ${codigo} removida.`, "sucesso");
+        carregarEntregas();
+      }
+    }
+
+    buscaEl.addEventListener("input", renderizarTabela);
+    carregarEntregas();
+  </script>
+</body>
+</html>
+EOF

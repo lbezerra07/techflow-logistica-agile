@@ -1,15 +1,22 @@
-const { describe, it, beforeEach } = require("node:test");
+const { describe, it, beforeEach, afterEach } = require("node:test");
 const assert = require("node:assert/strict");
+const { criarConexao } = require("../src/database");
 const { GerenciadorEntregas } = require("../src/entregas");
 
-describe("GerenciadorEntregas (CRUD + validações)", () => {
+describe("GerenciadorEntregas com SQLite (CRUD + validações)", () => {
+  let db;
   let gerenciador;
 
   beforeEach(() => {
-    gerenciador = new GerenciadorEntregas();
+    db = criarConexao(":memory:");
+    gerenciador = new GerenciadorEntregas(db);
   });
 
-  it("deve cadastrar uma entrega válida com status inicial Pendente", () => {
+  afterEach(() => {
+    db.close();
+  });
+
+  it("deve cadastrar uma entrega válida no SQLite com status inicial Pendente", () => {
     const entrega = gerenciador.cadastrar({
       codigo: "TF-101",
       destinatario: "Ana Silva",

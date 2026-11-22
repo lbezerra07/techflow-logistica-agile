@@ -1,4 +1,4 @@
-// Modelo e gerenciamento básico de entregas para a TechFlow Solutions (logística)
+const { criarConexao } = require("./database");
 
 const STATUS_VALIDOS = ["Pendente", "Em Rota", "Entregue"];
 
@@ -25,33 +25,37 @@ class Entrega {
 }
 
 class GerenciadorEntregas {
-  constructor() {
-    this.entregas = [];
+  constructor(db = criarConexao()) {
+    this.db = db;
   }
 
-  // Create: cadastra nova entrega evitando código duplicado
   cadastrar(dados) {
     const entrega = new Entrega(dados);
-    const jaExiste = this.entregas.some((item) => item.codigo === entrega.codigo);
 
-    if (jaExiste) {
+    if (this.buscarPorCodigo(entrega.codigo)) {
       throw new Error(`Já existe uma entrega com o código ${entrega.codigo}.`);
     }
 
-    this.entregas.push(entrega);
+    const stmt = this.db.prepare(
+      "INSERT INTO entregas (codigo, destinatario, destino, status) VALUES (?, ?, ?, ?)"
+    );
+    stmt.run(entrega.codigo, entrega.destinatario, entrega.destino, entrega.status);
+
     return entrega;
   }
 
-  // Read: lista todas ou busca pelo código de rastreio
   listar() {
-    return [...this.entregas];
+    const stmt = this.db.prepare("SELECT codigo, destinatario, destino, status FROM entregas");
+    return stmt.all();
   }
 
   buscarPorCodigo(codigo) {
-    return this.entregas.find((item) => item.codigo === String(codigo).trim()) || null;
+    const stmt = this.db.prepare(
+      "SELECT codigo, destinatario, destino, status FROM entregas WHERE codigo = ?"
+    );
+    return stmt.get(String(codigo).trim()) || null;
   }
 
-  // Update: atualiza status validando valores permitidos
   atualizarStatus(codigo, novoStatus) {
     if (!STATUS_VALIDOS.includes(novoStatus)) {
       throw new Error(`Status inválido: ${novoStatus}`);
@@ -62,19 +66,22 @@ class GerenciadorEntregas {
       throw new Error(`Entrega ${codigo} não encontrada.`);
     }
 
-    entrega.status = novoStatus;
-    return entrega;
+    const stmt = this.db.prepare("UPDATE entregas SET status = ? WHERE codigo = ?");
+    stmt.run(novoStatus, entrega.codigo);
+
+    return this.buscarPorCodigo(entrega.codigo);
   }
 
-  // Delete: remove entrega existente ou lança erro se não achar
   remover(codigo) {
-    const indice = this.entregas.findIndex((item) => item.codigo === String(codigo).trim());
-    if (indice === -1) {
+    const entrega = this.buscarPorCodigo(codigo);
+    if (!entrega) {
       throw new Error(`Entrega ${codigo} não encontrada.`);
     }
 
-    const [removida] = this.entregas.splice(indice, 1);
-    return removida;
+    const stmt = this.db.prepare("DELETE FROM entregas WHERE codigo = ?");
+    stmt.run(entrega.codigo);
+
+    return entrega;
   }
 }
 

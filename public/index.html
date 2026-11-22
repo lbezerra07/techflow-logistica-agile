@@ -14,6 +14,7 @@
       --primary: #3b82f6;
       --primary-hover: #2563eb;
       --warning: #f59e0b;
+      --purple: #a855f7;
       --info: #06b6d4;
       --success: #10b981;
       --danger: #ef4444;
@@ -29,7 +30,7 @@
     }
 
     .container {
-      max-width: 1040px;
+      max-width: 1120px;
       margin: 0 auto;
     }
 
@@ -58,7 +59,7 @@
 
     .stats {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
       gap: 1rem;
       margin-bottom: 2rem;
     }
@@ -72,7 +73,7 @@
 
     .stat-card small {
       color: var(--text-muted);
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
@@ -100,14 +101,8 @@
       margin-bottom: 1rem;
     }
 
-    .card h2 {
-      font-size: 1.1rem;
-    }
-
-    .card-hint {
-      color: var(--text-muted);
-      font-size: 0.85rem;
-    }
+    .card h2 { font-size: 1.1rem; }
+    .card-hint { color: var(--text-muted); font-size: 0.85rem; }
 
     form {
       display: grid;
@@ -129,9 +124,7 @@
       outline: none;
     }
 
-    input:focus, select:focus {
-      border-color: var(--primary);
-    }
+    input:focus, select:focus { border-color: var(--primary); }
 
     button {
       background: var(--primary);
@@ -145,6 +138,14 @@
     }
 
     button:hover { background: var(--primary-hover); }
+
+    button.btn-salvar {
+      background: var(--success);
+      padding: 0.4rem 0.75rem;
+      font-size: 0.85rem;
+    }
+
+    button.btn-salvar:hover { background: #059669; }
 
     button.btn-danger {
       background: transparent;
@@ -208,14 +209,16 @@
       font-weight: 600;
     }
 
-    .badge-Pendente { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
-    .badge-Em\ Rota { background: rgba(6, 182, 212, 0.15); color: var(--info); }
-    .badge-Entregue { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .badge-aguardando { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .badge-producao { background: rgba(168, 85, 247, 0.15); color: var(--purple); }
+    .badge-rota { background: rgba(6, 182, 212, 0.15); color: var(--info); }
+    .badge-entregue { background: rgba(16, 185, 129, 0.15); color: var(--success); }
 
     .acoes {
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      flex-wrap: wrap;
     }
 
     .acoes select {
@@ -246,8 +249,12 @@
         <strong id="stat-total">0</strong>
       </div>
       <div class="stat-card">
-        <small>Pendentes</small>
-        <strong id="stat-pendente" style="color: var(--warning)">0</strong>
+        <small>Aguardando Produção</small>
+        <strong id="stat-aguardando" style="color: var(--warning)">0</strong>
+      </div>
+      <div class="stat-card">
+        <small>Produção Concluída</small>
+        <strong id="stat-producao" style="color: var(--purple)">0</strong>
       </div>
       <div class="stat-card">
         <small>Em Rota</small>
@@ -298,12 +305,26 @@
   </div>
 
   <script>
+    const STATUS_LISTA = [
+      "Aguardando Produção",
+      "Produção Concluída",
+      "Em Rota",
+      "Entregue",
+    ];
+
     let entregasCache = [];
 
     const tabelaEl = document.getElementById("tabela-entregas");
     const feedbackEl = document.getElementById("feedback");
     const buscaEl = document.getElementById("busca");
     const statusApiEl = document.getElementById("status-api");
+
+    function classeBadge(status) {
+      if (status === "Aguardando Produção") return "badge-aguardando";
+      if (status === "Produção Concluída") return "badge-producao";
+      if (status === "Em Rota") return "badge-rota";
+      return "badge-entregue";
+    }
 
     function mostrarFeedback(mensagem, tipo) {
       feedbackEl.textContent = mensagem;
@@ -313,9 +334,14 @@
 
     function atualizarEstatisticas(lista) {
       document.getElementById("stat-total").textContent = lista.length;
-      document.getElementById("stat-pendente").textContent = lista.filter(e => e.status === "Pendente").length;
-      document.getElementById("stat-rota").textContent = lista.filter(e => e.status === "Em Rota").length;
-      document.getElementById("stat-entregue").textContent = lista.filter(e => e.status === "Entregue").length;
+      document.getElementById("stat-aguardando").textContent =
+        lista.filter(e => e.status === "Aguardando Produção").length;
+      document.getElementById("stat-producao").textContent =
+        lista.filter(e => e.status === "Produção Concluída").length;
+      document.getElementById("stat-rota").textContent =
+        lista.filter(e => e.status === "Em Rota").length;
+      document.getElementById("stat-entregue").textContent =
+        lista.filter(e => e.status === "Entregue").length;
     }
 
     function renderizarTabela() {
@@ -336,14 +362,15 @@
           <td><strong>${entrega.codigo}</strong></td>
           <td>${entrega.destinatario}</td>
           <td>${entrega.destino}</td>
-          <td><span class="badge badge-${entrega.status}">${entrega.status}</span></td>
+          <td><span class="badge ${classeBadge(entrega.status)}">${entrega.status}</span></td>
           <td class="acoes">
-            <select aria-label="Alterar status" onchange="alterarStatus('${entrega.codigo}', this.value)">
-              <option value="Pendente" ${entrega.status === "Pendente" ? "selected" : ""}>Pendente</option>
-              <option value="Em Rota" ${entrega.status === "Em Rota" ? "selected" : ""}>Em Rota</option>
-              <option value="Entregue" ${entrega.status === "Entregue" ? "selected" : ""}>Entregue</option>
+            <select id="status-${entrega.codigo}" aria-label="Alterar status">
+              ${STATUS_LISTA.map(st =>
+                `<option value="${st}" ${entrega.status === st ? "selected" : ""}>${st}</option>`
+              ).join("")}
             </select>
-            <button class="btn-danger" onclick="removerEntrega('${entrega.codigo}')">Excluir</button>
+            <button type="button" class="btn-salvar" onclick="salvarStatus('${entrega.codigo}')">Salvar</button>
+            <button type="button" class="btn-danger" onclick="removerEntrega('${entrega.codigo}')">Excluir</button>
           </td>
         </tr>
       `).join("");
@@ -382,17 +409,24 @@
       carregarEntregas();
     });
 
-    async function alterarStatus(codigo, novoStatus) {
+    async function salvarStatus(codigo) {
+      const selectEl = document.getElementById(`status-${codigo}`);
+      const novoStatus = selectEl.value;
+
       const res = await fetch(`/api/entregas/${encodeURIComponent(codigo)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: novoStatus }),
       });
 
-      if (res.ok) {
-        mostrarFeedback(`Status de ${codigo} atualizado para "${novoStatus}".`, "sucesso");
-        carregarEntregas();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        mostrarFeedback(data.erro || "Transição de status inválida.", "erro");
+        return carregarEntregas();
       }
+
+      mostrarFeedback(`Status de ${codigo} salvo como "${novoStatus}".`, "sucesso");
+      carregarEntregas();
     }
 
     async function removerEntrega(codigo) {

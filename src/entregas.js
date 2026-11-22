@@ -8,13 +8,6 @@ const STATUS_VALIDOS = [
   "Entregue",
 ];
 
-const TRANSICOES_PERMITIDAS = {
-  "Aguardando Produção": ["Produção Concluída"],
-  "Produção Concluída": ["Em Rota"],
-  "Em Rota": ["Entregue"],
-  "Entregue": [],
-};
-
 const CARACTERES_CODIGO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 function gerarBlocoAleatorio(tamanho = 3) {
@@ -118,15 +111,6 @@ class GerenciadorEntregas {
       throw new Error(`Entrega ${codigo} não encontrada.`);
     }
 
-    if (entrega.status !== novoStatus) {
-      const permitidos = TRANSICOES_PERMITIDAS[entrega.status] || [];
-      if (!permitidos.includes(novoStatus)) {
-        throw new Error(
-          `Transição de status inválida: ${entrega.status} -> ${novoStatus}`
-        );
-      }
-    }
-
     const stmt = this.db.prepare("UPDATE entregas SET status = ? WHERE codigo = ?");
     stmt.run(novoStatus, entrega.codigo);
 
@@ -150,6 +134,5 @@ module.exports = {
   Entrega,
   GerenciadorEntregas,
   STATUS_VALIDOS,
-  TRANSICOES_PERMITIDAS,
   gerarCodigoRastreio,
 };

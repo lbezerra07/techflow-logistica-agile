@@ -63,28 +63,17 @@ describe("GerenciadorEntregas com SQLite (CRUD + validações)", () => {
     assert.equal(gerenciador.buscarPorCodigo("TF-ZZZ-9999"), null);
   });
 
-  it("deve avançar status na ordem válida e bloquear status ou transição inválida", () => {
+  it("deve atualizar para qualquer status válido e rejeitar status inválido", () => {
     const criada = gerenciador.cadastrar({
       destinatario: "Pedro Lima",
       destino: "Belo Horizonte - MG",
     });
 
-    assert.throws(() => {
-      gerenciador.atualizarStatus(criada.codigo, "Em Rota");
-    }, /Transição de status inválida/);
+    const entregueDireto = gerenciador.atualizarStatus(criada.codigo, "Entregue");
+    assert.equal(entregueDireto.status, "Entregue");
 
     const producaoConcluida = gerenciador.atualizarStatus(criada.codigo, "Produção Concluída");
     assert.equal(producaoConcluida.status, "Produção Concluída");
-
-    const emRota = gerenciador.atualizarStatus(criada.codigo, "Em Rota");
-    assert.equal(emRota.status, "Em Rota");
-
-    const entregue = gerenciador.atualizarStatus(criada.codigo, "Entregue");
-    assert.equal(entregue.status, "Entregue");
-
-    assert.throws(() => {
-      gerenciador.atualizarStatus(criada.codigo, "Aguardando Produção");
-    }, /Transição de status inválida/);
 
     assert.throws(() => {
       gerenciador.atualizarStatus(criada.codigo, "Extraviado");
